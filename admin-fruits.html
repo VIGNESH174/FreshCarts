@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>FreshCart - Manage Fruits</title>
+
+    <link
+        rel="stylesheet"
+        href="/src/admin.css"
+    >
+</head>
+
+<body>
+
+    <!-- HEADER -->
+
+    <header class="admin-header">
+
+        <div>
+
+            <h1>🍎 Fruits Management</h1>
+
+            <p>
+                Manage fruits, prices, variants and availability
+            </p>
+
+        </div>
+
+        <div class="admin-header-actions">
+
+            <a
+                href="/admin.html"
+                class="back-button"
+            >
+                ← Dashboard
+            </a>
+
+            <button
+                id="addFruitButton"
+                class="add-product-button"
+            >
+                + Add Fruit
+            </button>
+            <!-- ADD PRODUCT MODAL -->
+
+<div
+    id="productAddModal"
+    class="product-edit-modal"
+>
+
+    <div class="product-edit-overlay"></div>
+
+
+    <div class="product-edit-container">
+
+        <!-- HEADER -->
+
+        <div class="product-edit-header">
+
+            <div>
+
+                <h2>Add New Fruit</h2>
+
+                <p>
+                    Create a new fruit product
+                </p>
+
+            </div>
+
+
+            <button
+                type="button"
+                id="closeProductAdd"
+                class="product-edit-close"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <!-- FORM -->
+
+        <form id="productAddForm">
+
+            <!-- NAME -->
+
+            <div class="product-edit-field">
+
+                <label for="addProductName">
+                    Product Name
+                </label>
+
+                <input
+                    type="text"
+                    id="addProductName"
+                    placeholder="Example: Kashmir Apple"
+                    required
+                >
+
+            </div>
+
+
+            <!-- DESCRIPTION -->
+
+            <div class="product-edit-field">
+
+                <label for="addProductDescription">
+                    Description
+                </label>
+
+                <textarea
+                    id="addProductDescription"
+                    rows="4"
+                    placeholder="Enter product description..."
+                ></textarea>
+
+            </div>
+
+
+            <!-- ORIGIN -->
+
+            <div class="product-edit-field">
+
+                <label for="addProductOrigin">
+                    Origin
+                </label>
+
+                <input
+                    type="text"
+                    id="addProductOrigin"
+                    placeholder="Example: Kashmir, India"
+                >
+
+            </div>
+
+
+            <!-- IMAGE -->
+
+            <div class="product-edit-field">
+
+                <label for="addProductImage">
+                    Image URL
+                </label>
+
+                <input
+                    type="url"
+                    id="addProductImage"
+                    placeholder="https://..."
+                >
+
+            </div>
+
+
+            <!-- VARIANTS -->
+
+            <div class="product-edit-field">
+
+                <label>
+                    Variants & Prices
+                </label>
+
+
+                <div
+                    id="addVariantsList"
+                    class="edit-variants-list"
+                >
+
+                    <div
+                        class="edit-variant-row"
+                    >
+
+                        <input
+                            type="text"
+                            class="add-variant-name"
+                            placeholder="Variant name (e.g. 500g)"
+                            required
+                        >
+
+
+                        <input
+                            type="number"
+                            class="add-variant-price"
+                            placeholder="Price"
+                            min="0"
+                            step="0.01"
+                            required
+                        >
+
+
+                        <button
+                            type="button"
+                            class="remove-add-variant-button"
+                        >
+                            ×
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    id="addNewVariantButton"
+                    class="add-variant-button"
+                >
+                    + Add Variant
+                </button>
+
+            </div>
+
+
+            <!-- ACTIONS -->
+
+            <div class="product-edit-actions">
+
+                <button
+                    type="button"
+                    id="cancelProductAdd"
+                    class="product-cancel-button"
+                >
+                    Cancel
+                </button>
+
+
+                   <button
+            type="submit"
+            id="saveProductButton"
+            class="product-save-button"
+        >
+            Save Changes
+        </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+        </div>
+
+    </header>
+
+
+    <!-- MAIN -->
+
+    <main class="admin-container">
+
+        <!-- SEARCH -->
+
+        <section class="product-management-toolbar">
+
+            <div>
+
+                <h2>All Fruits</h2>
+
+                <p>
+                    Products available in the fruits category
+                </p>
+
+            </div>
+
+            <div class="product-search">
+
+                <input
+                    type="text"
+                    id="fruitSearch"
+                    placeholder="Search fruits..."
+                >
+
+            </div>
+
+        </section>
+
+
+        <!-- PRODUCTS -->
+
+        <section class="products-management-section">
+
+            <div
+                id="fruitsList"
+                class="products-management-list"
+            >
+
+                <div class="products-loading">
+                    Loading fruits...
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- EDIT PRODUCT MODAL -->
+
+<div id="productEditModal" class="product-edit-modal">
+
+    <div class="product-edit-overlay"></div>
+
+    <div class="product-edit-container">
+
+        <div class="product-edit-header">
+
+            <div>
+                <h2>Edit Fruit</h2>
+                <p>Update product information</p>
+            </div>
+
+            <button
+                type="button"
+                id="closeProductEdit"
+                class="product-edit-close"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="productEditForm">
+
+            <input
+                type="hidden"
+                id="editProductId"
+            >
+
+
+            <div class="product-edit-field">
+
+                <label for="editProductName">
+                    Product Name
+                </label>
+
+                <input
+                    type="text"
+                    id="editProductName"
+                    required
+                >
+
+            </div>
+
+
+            <div class="product-edit-field">
+
+                <label for="editProductDescription">
+                    Description
+                </label>
+
+                <textarea
+                    id="editProductDescription"
+                    rows="4"
+                ></textarea>
+
+            </div>
+
+
+            <div class="product-edit-field">
+
+                <label for="editProductOrigin">
+                    Origin
+                </label>
+
+                <input
+                    type="text"
+                    id="editProductOrigin"
+                >
+
+            </div>
+
+
+            <div class="product-edit-field">
+
+    <label for="editProductImageFile">
+        Product Image
+    </label>
+
+    <div class="product-image-upload">
+
+        <input
+            type="file"
+            id="editProductImageFile"
+            accept="image/*"
+        >
+
+        <small>
+            Select a new image only if you want to replace the current image.
+        </small>
+
+        <div id="editProductImagePreview" class="product-image-preview">
+            <img
+                id="editProductPreviewImg"
+                src=""
+                alt="Product preview"
+            >
+        </div>
+
+    </div>
+
+</div>
+
+            <div class="product-edit-field">
+    <label>Variants & Prices</label>
+
+    <div id="editVariantsList" class="edit-variants-list">
+        <!-- Variants will be loaded here -->
+    </div>
+
+    <button
+    type="button"
+    id="addVariantButton"
+    class="add-variant-button"
+>
+    + Add Variant
+</button>
+
+</div>
+
+
+<!-- Stock Management -->
+<div class="product-edit-field">
+    <label>Stock Management</label>
+
+    <div class="stock-edit-grid">
+
+        <div class="stock-edit-input">
+            <label for="editProductStock">Stock Quantity</label>
+            <input
+                type="number"
+                id="editProductStock"
+                min="0"
+                step="1"
+                placeholder="0"
+                required
+            >
+        </div>
+
+        <div class="stock-edit-input">
+            <label for="editProductStockUnit">Stock Unit</label>
+            <select id="editProductStockUnit">
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="pcs">pcs</option>
+                <option value="bunch">bunch</option>
+                <option value="box">box</option>
+                <option value="dozen">dozen</option>
+            </select>
+        </div>
+
+        <div class="stock-edit-input">
+            <label for="editLowStockThreshold">
+                Low Stock Alert
+            </label>
+            <input
+                type="number"
+                id="editLowStockThreshold"
+                min="0"
+                step="1"
+                placeholder="5"
+                required
+            >
+        </div>
+
+    </div>
+</div>
+
+
+<!-- ADD THIS -->
+<div class="product-edit-actions">
+
+    <button
+        type="button"
+        id="cancelProductEdit"
+        class="product-cancel-button"
+    >
+        Cancel
+    </button>
+
+    <button
+        type="submit"
+        id="saveProductButton"
+        class="product-save-button"
+    >
+        Save Changes
+    </button>
+
+</div>
+
+</form>
+
+
+    <script
+        type="module"
+        src="/src/admin-fruits.js"
+    ></script>
+
+</body>
+
+</html>
