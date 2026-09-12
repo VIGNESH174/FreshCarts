@@ -644,7 +644,7 @@ async function handleCheckoutSubmit(event) {
                     'placed'
 
             })
-            .select('id')
+            .select('id, tracking_token')
             .single();
 
 
@@ -683,21 +683,14 @@ async function handleCheckoutSubmit(event) {
             throw itemsError;
         }
 
-        for (const item of cart) {
+       for (const item of cart) {
 
     const productId = Number(item.productId);
-
-    const orderedAmount =
-        getVariantStockAmount(item.variant);
-
-    if (orderedAmount <= 0) {
-        continue;
-    }
 
     const { data: product, error: productFetchError } =
         await supabase
             .from('products')
-            .select('stock_quantity')
+            .select('stock_quantity, stock_unit')
             .eq('id', productId)
             .single();
 
@@ -705,31 +698,32 @@ async function handleCheckoutSubmit(event) {
         throw productFetchError;
     }
 
-    const currentStock =
-        Number(product.stock_quantity || 0);
+    const orderedAmount =
+        getVariantStockAmount(
+            item.variant,
+            product.stock_unit
+        ) * Number(item.quantity);
 
-    const newStock =
-        Math.max(
-            0,
-            currentStock - (orderedAmount * Number(item.quantity))
+    if (orderedAmount <= 0) {
+        throw new Error(
+            `Unable to convert ${item.variant} to ${product.stock_unit}`
         );
-
-    const { error: stockUpdateError } =
-        await supabase
-            .from('products')
-            .update({
-                stock_quantity: newStock
-            })
-            .eq('id', productId);
-
-    if (stockUpdateError) {
-        throw stockUpdateError;
     }
+    
+    const { error: stockUpdateError } =
+    await supabase.rpc('reduce_product_stock', {
+        p_product_id: productId,
+        p_quantity: orderedAmount
+    });
 
-    console.log(
-        `FreshCart: Product ${productId} stock updated`,
-        `${currentStock} → ${newStock}`
-    );
+if (stockUpdateError) {
+    throw stockUpdateError;
+}
+
+console.log(
+    `FreshCart: Product ${productId} stock reduced by`,
+    orderedAmount
+);
 }
 
         // =================================================
@@ -740,6 +734,7 @@ async function handleCheckoutSubmit(event) {
 
         showOrderSuccess(
             order.id,
+            order.tracking_token,
             totalAmount
         );
 
@@ -772,6 +767,7 @@ async function handleCheckoutSubmit(event) {
 
 function showOrderSuccess(
     orderId,
+    trackingToken,
     totalAmount
 ) {
 
@@ -779,7 +775,6 @@ function showOrderSuccess(
         document.querySelector(
             '.checkout-container'
         );
-
 
     container.innerHTML = `
 
@@ -797,61 +792,64 @@ function showOrderSuccess(
                 Thank you for shopping with FreshCart.
             </p>
 
-
             <div class="order-success-details">
 
                 <div>
-
-                    <span>
-                        Order ID
-                    </span>
+                    <span>Order ID</span>
 
                     <strong>
                         #${orderId}
                     </strong>
-
                 </div>
 
-
                 <div>
-
-                    <span>
-                        Total Amount
-                    </span>
+                    <span>Total Amount</span>
 
                     <strong>
                         ${formatPrice(totalAmount)}
                     </strong>
-
                 </div>
 
             </div>
 
-
             <p class="order-success-message">
-
                 Your fresh fruits and vegetables
                 will be delivered to your doorstep.
-
             </p>
 
+            <div class="checkout-success-actions">
 
-            <button
-                type="button"
-                class="checkout-success-button"
-            >
-                Continue Shopping
-            </button>
+                <button
+                    type="button"
+                    class="checkout-track-button"
+                >
+                    Track Order
+                </button>
+
+                <button
+                    type="button"
+                    class="checkout-success-button"
+                >
+                    Continue Shopping
+                </button>
+
+            </div>
 
         </div>
 
     `;
 
+    const trackButton = container.querySelector('.checkout-track-button');
+
+if (trackButton) {
+    trackButton.addEventListener('click', () => {
+        window.location.href =
+            `/order-tracking.html?orderId=${orderId}&token=${trackingToken}`;
+    });
+}
 
     container
-        .querySelector(
-            '.checkout-success-button'
-        )
+        .querySelector('.checkout-success-button')
         .addEventListener(
             'click',
             () => {
@@ -862,9 +860,8 @@ function showOrderSuccess(
 
             }
         );
+
 }
-
-
 // =====================================================
 // ERROR
 // =====================================================
@@ -897,94 +894,191 @@ function formatPrice(price) {
 }
 
 
-function getVariantStockAmount(variantName) {
+function getVariantStockAmount(variantName, stockUnit) {
+    const text = String(variantName || '')
+        .toLowerCase()
+        .trim();
 
-    const text =
-        String(variantName || '')
-            .toLowerCase()
-            .trim();
+    const unit = String(stockUnit || '')
+        .toLowerCase()
+        .trim();
 
     /*
-     * Kilograms
+     * -----------------------------------------
+     * Extract quantity from the selected variant
+     * -----------------------------------------
      */
 
-    const kgMatch =
-        text.match(/(\d+(?:\.\d+)?)\s*kg/);
-
+    // Kilograms
+    const kgMatch = text.match(/(\d+(?:\.\d+)?)\s*kg/);
     if (kgMatch) {
-        return Number(kgMatch[1]);
+        const kg = Number(kgMatch[1]);
+
+        if (unit === 'kg') {
+            return kg;
+        }
+
+        if (unit === 'g' || unit === 'gram' || unit === 'grams') {
+            return kg * 1000;
+        }
+
+        return kg;
     }
 
-
-    /*
-     * Grams
-     */
-
-    const gramMatch =
-        text.match(/(\d+(?:\.\d+)?)\s*g\b/);
-
+    // Grams
+    const gramMatch = text.match(/(\d+(?:\.\d+)?)\s*g\b/);
     if (gramMatch) {
-        return Number(gramMatch[1]) / 1000;
+        const grams = Number(gramMatch[1]);
+
+        if (unit === 'kg') {
+            return grams / 1000;
+        }
+
+        if (
+            unit === 'g' ||
+            unit === 'gram' ||
+            unit === 'grams'
+        ) {
+            return grams;
+        }
+
+        return grams;
     }
 
+    // Dozen
+    const dozenMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:dz|dozen)/);
+    if (dozenMatch) {
+        const dozen = Number(dozenMatch[1]);
+        const pieces = dozen * 12;
 
-    /*
-     * Pieces
-     */
+        if (
+            unit === 'pcs' ||
+            unit === 'pc' ||
+            unit === 'piece' ||
+            unit === 'pieces'
+        ) {
+            return pieces;
+        }
 
-    const pieceMatch =
-        text.match(/(\d+(?:\.\d+)?)\s*(?:pcs?|pieces?)/);
+        /*
+         * If inventory is stored as dozen,
+         * keep it as dozen.
+         */
+        if (unit === 'dozen' || unit === 'dz') {
+            return dozen;
+        }
+
+        /*
+         * Dozen → kg cannot be calculated safely
+         * without knowing the average weight of one piece.
+         */
+        console.warn(
+            `FreshCart: Cannot safely convert ${variantName} to ${stockUnit}`
+        );
+
+        return 0;
+    }
+
+    // Pieces
+    const pieceMatch = text.match(
+        /(\d+(?:\.\d+)?)\s*(?:pcs?|pieces?)/
+    );
 
     if (pieceMatch) {
-        return Number(pieceMatch[1]);
+        const pieces = Number(pieceMatch[1]);
+
+        if (
+            unit === 'pcs' ||
+            unit === 'pc' ||
+            unit === 'piece' ||
+            unit === 'pieces'
+        ) {
+            return pieces;
+        }
+
+        if (unit === 'dozen' || unit === 'dz') {
+            return pieces / 12;
+        }
+
+        /*
+         * Pieces → kg requires the average weight
+         * of one piece, so don't guess.
+         */
+        console.warn(
+            `FreshCart: Cannot safely convert ${variantName} to ${stockUnit}`
+        );
+
+        return 0;
     }
 
+    // Boxes
+    const boxMatch = text.match(
+        /(\d+(?:\.\d+)?)\s*(?:boxes?|box)/
+    );
 
-    /*
-     * Dozen
-     */
+    if (boxMatch) {
+        const boxes = Number(boxMatch[1]);
 
-    if (text.includes('dozen') || text.includes('dz')) {
+        if (unit === 'box' || unit === 'boxes') {
+            return boxes;
+        }
 
-        const dozenMatch =
-            text.match(/(\d+(?:\.\d+)?)/);
+        console.warn(
+            `FreshCart: Cannot safely convert ${variantName} to ${stockUnit}`
+        );
 
-        if (dozenMatch) {
-            return Number(dozenMatch[1]) * 12;
+        return 0;
+    }
+
+    // Bunches
+    const bunchMatch = text.match(
+        /(\d+(?:\.\d+)?)\s*(?:bunch(?:es)?)/
+    );
+
+    if (bunchMatch) {
+        const bunches = Number(bunchMatch[1]);
+
+        if (unit === 'bunch' || unit === 'bunches') {
+            return bunches;
+        }
+
+        console.warn(
+            `FreshCart: Cannot safely convert ${variantName} to ${stockUnit}`
+        );
+
+        return 0;
+    }
+
+    // Single piece / single box / single bunch
+    if (/\b(?:pc|piece)\b/.test(text)) {
+        if (
+            unit === 'pcs' ||
+            unit === 'pc' ||
+            unit === 'piece' ||
+            unit === 'pieces'
+        ) {
+            return 1;
         }
     }
 
-
-    /*
-     * Single piece / box / bunch
-     */
-
-    if (
-        text.includes('pc') ||
-        text.includes('box') ||
-        text.includes('bunch')
-    ) {
-
-        const singleMatch =
-            text.match(/(\d+(?:\.\d+)?)/);
-
-        if (singleMatch) {
-            return Number(singleMatch[1]);
+    if (/\bbox\b/.test(text)) {
+        if (unit === 'box' || unit === 'boxes') {
+            return 1;
         }
-
-        return 1;
     }
 
+    if (/\bbunch\b/.test(text)) {
+        if (unit === 'bunch' || unit === 'bunches') {
+            return 1;
+        }
+    }
 
-    /*
-     * If the variant doesn't contain
-     * a measurable amount, treat it
-     * as one unit.
-     */
+    console.warn(
+        `FreshCart: Unknown stock conversion for variant "${variantName}" with stock unit "${stockUnit}"`
+    );
 
-    return 1;
+    return 0;
 }
-
 
 
 // =====================================================

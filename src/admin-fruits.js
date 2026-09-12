@@ -1,8 +1,17 @@
+console.log("FRUITS JS FILE LOADED");
 import { supabase } from './services/supabase.js';
+import { requireAdmin } from './admin-auth.js';
+
+const isAuthenticated = await requireAdmin();
+
+if (!isAuthenticated) {
+    throw new Error('Admin authentication required.');
+}
+
 
 const PRODUCT_IMAGES = {
     "Shimla Royal Apple":
-        "https://images.pexels.com/photos/3746517/pexels-photo-3746517.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+        "ysrgb&h=650&w=940https://images.pexels.com/photos/3746517/pexels-photo-3746517.jpeg?auto=compress&cs=tin",
 
     "Robusta Banana":
         "https://images.pexels.com/photos/47305/bananas-banana-shrub-fruits-yellow-47305.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
@@ -25,6 +34,8 @@ let fruits = [];
 
 
 async function loadFruits() {
+
+    console.log("FRUITS: loadFruits() started");
 
     const container =
         document.getElementById('fruitsList');
@@ -59,6 +70,10 @@ async function loadFruits() {
 `)
                 .eq('is_active', true)
                 .order('id');
+
+        console.log("FRUITS: Supabase query finished");
+        console.log("FRUITS: data =", data);
+        console.log("FRUITS: error =", error);
 
         if (error) {
             throw error;
@@ -1208,6 +1223,23 @@ async function createProduct(event) {
             'addProductImage'
         ).value.trim();
 
+    const stockQuantity = Number(
+    document.getElementById(
+        'addProductStock'
+    ).value
+);
+
+const stockUnit =
+    document.getElementById(
+        'addProductStockUnit'
+    ).value;
+
+const lowStockThreshold = Number(
+    document.getElementById(
+        'addLowStockThreshold'
+    ).value
+);
+
 
     const button =
         document.getElementById(
@@ -1224,6 +1256,27 @@ async function createProduct(event) {
         return;
     }
 
+    if (
+    Number.isNaN(stockQuantity) ||
+    stockQuantity < 0
+) {
+    alert(
+        'Please enter a valid stock quantity.'
+    );
+
+    return;
+}
+
+if (
+    Number.isNaN(lowStockThreshold) ||
+    lowStockThreshold < 0
+) {
+    alert(
+        'Please enter a valid low stock threshold.'
+    );
+
+    return;
+}
 
     // ====================================
     // COLLECT VARIANTS
@@ -1344,7 +1397,11 @@ const { data: product, error: productError } = await supabase
         origin: origin,
         image_url: imageUrl || null,
         category_id: category.id,
-        is_active: true
+        is_active: true,
+
+        stock_quantity: stockQuantity,
+        stock_unit: stockUnit,
+        low_stock_threshold: lowStockThreshold
     })
     .select('id')
     .single();
@@ -1647,18 +1704,24 @@ function setupImagePreview() {
 
 
 
-document.addEventListener(
-    'DOMContentLoaded',
-    () => {
+async function initializeFruitsPage() {
+    console.log("FRUITS: Page initialization started");
 
-         loadFruits();
-         setupSearch();
-         setupEditButtons();
-         setupEditModal();
-         setupVariantControls();
-         setupAddProductModal();
-         setupAddVariantControls();
-         setupImagePreview();
+    await loadFruits();
 
-    }
-);
+    setupSearch();
+    setupEditButtons();
+    setupEditModal();
+    setupVariantControls();
+    setupAddProductModal();
+    setupAddVariantControls();
+    setupImagePreview();
+
+    console.log("FRUITS: Page initialization completed");
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeFruitsPage);
+} else {
+    initializeFruitsPage();
+}

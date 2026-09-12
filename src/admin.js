@@ -1,4 +1,14 @@
+
+
+import { requireAdmin, logoutAdmin } from './admin-auth.js';
 import { supabase } from './services/supabase.js';
+
+const isAuthenticated = await requireAdmin();
+
+if (!isAuthenticated) {
+    throw new Error('Admin authentication required.');
+}
+
 
 
 // =====================================================
@@ -1283,8 +1293,56 @@ document
     );
 
 
+
+
+document.addEventListener('click', async (event) => {
+
+    const logoutButton =
+        event.target.closest('#adminLogoutButton');
+
+    if (!logoutButton) {
+        return;
+    }
+
+    console.log('FreshCart: Logout button clicked');
+
+    logoutButton.disabled = true;
+    logoutButton.textContent = 'Logging out...';
+
+    await logoutAdmin();
+
+});
+
+
+
+
+
 // =====================================================
 // INITIAL LOAD
 // =====================================================
 
 loadOrders();
+
+
+document.addEventListener('click', async (event) => {
+
+    const logoutButton =
+        event.target.closest('#adminLogoutButton');
+
+    if (!logoutButton) {
+        return;
+    }
+
+    console.log('FreshCart: Logout button clicked');
+
+    logoutButton.disabled = true;
+    logoutButton.textContent = 'Logging out...';
+
+    const success = await logoutAdmin();
+
+    if (!success) {
+        logoutButton.disabled = false;
+        logoutButton.textContent = 'Logout';
+    }
+
+});

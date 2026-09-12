@@ -5016,3 +5016,205 @@ body {
     object-fit: cover;
     display: block;
 }
+
+/* =========================================
+   ADMIN LOGIN
+========================================= */
+
+.admin-login-page {
+    min-height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #f4f8f2;
+
+    padding: 20px;
+}
+
+
+.admin-login-card {
+    width: 100%;
+    max-width: 420px;
+
+    background: #ffffff;
+
+    padding: 40px;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.10);
+
+    text-align: center;
+}
+
+
+.admin-login-logo {
+    width: 70px;
+    height: 70px;
+
+    margin: 0 auto 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #e8f5e9;
+
+    border-radius: 50%;
+
+    font-size: 32px;
+}
+
+
+.admin-login-card h1 {
+    margin: 0;
+
+    color: #1b5e20;
+
+    font-size: 32px;
+}
+
+
+.admin-login-subtitle {
+    margin: 8px 0 30px;
+
+    color: #6b7280;
+
+    font-size: 15px;
+}
+
+
+.admin-login-field {
+    text-align: left;
+
+    margin-bottom: 20px;
+}
+
+
+.admin-login-field label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    font-weight: 600;
+
+    color: #374151;
+}
+
+
+.admin-login-field input {
+    width: 100%;
+
+    padding: 13px 14px;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 10px;
+
+    font-size: 15px;
+
+    outline: none;
+
+    box-sizing: border-box;
+}
+
+
+.admin-login-field input:focus {
+    border-color: #2e7d32;
+
+    box-shadow:
+        0 0 0 3px rgba(46, 125, 50, 0.12);
+}
+
+
+.admin-login-button {
+    width: 100%;
+
+    padding: 14px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: #2e7d32;
+
+    color: white;
+
+    font-size: 16px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+
+.admin-login-button:hover {
+    background: #1b5e20;
+}
+
+
+.admin-login-button:disabled {
+    opacity: 0.7;
+
+    cursor: not-allowed;
+}
+
+
+.admin-login-message {
+    min-height: 22px;
+
+    margin: 15px 0 0;
+
+    color: #dc2626;
+
+    font-size: 14px;
+}
+
+
+.back-to-store {
+    display: inline-block;
+
+    margin-top: 25px;
+
+    color: #2e7d32;
+
+    text-decoration: none;
+
+    font-weight: 600;
+}
+
+
+.back-to-store:hover {
+    text-decoration: underline;
+}
+
+.admin-logout-button {
+    padding: 10px 18px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #dc2626;
+    color: white;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+.admin-logout-button:hover {
+    background: #b91c1c;
+}
+
+
+.admin-logout-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

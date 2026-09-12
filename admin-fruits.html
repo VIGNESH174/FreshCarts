@@ -218,6 +218,76 @@
             </div>
 
 
+            <!-- STOCK MANAGEMENT -->
+
+<div class="product-edit-field">
+
+    <label>Stock Management</label>
+
+    <div class="stock-edit-grid">
+
+        <div class="stock-edit-input">
+
+            <label for="addProductStock">
+                Stock Quantity
+            </label>
+
+            <input
+                type="number"
+                id="addProductStock"
+                min="0"
+                step="0.1"
+                placeholder="Enter quantity"
+                value="10"
+                required
+            >
+
+        </div>
+
+
+        <div class="stock-edit-input">
+
+            <label for="addProductStockUnit">
+                Stock Unit
+            </label>
+
+            <select id="addProductStockUnit">
+
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="pcs">pcs</option>
+                <option value="bunch">bunch</option>
+                <option value="box">box</option>
+                <option value="dozen">dozen</option>
+
+            </select>
+
+        </div>
+
+
+        <div class="stock-edit-input">
+
+            <label for="addLowStockThreshold">
+                Low Stock Alert
+            </label>
+
+            <input
+                type="number"
+                id="addLowStockThreshold"
+                min="0"
+                step="1"
+                placeholder="5"
+                value="5"
+                required
+            >
+
+        </div>
+
+    </div>
+
+</div>
+
+
             <!-- ACTIONS -->
 
             <div class="product-edit-actions">
@@ -231,13 +301,13 @@
                 </button>
 
 
-                   <button
-            type="submit"
-            id="saveProductButton"
-            class="product-save-button"
-        >
-            Save Changes
-        </button>
+                <button
+    type="submit"
+    id="createProductButton"
+    class="product-save-button"
+>
+    Create Fruit
+</button>
 
             </div>
 
@@ -487,12 +557,12 @@
     </button>
 
     <button
-        type="submit"
-        id="saveProductButton"
-        class="product-save-button"
-    >
-        Save Changes
-    </button>
+    type="submit"
+    id="saveProductButton"
+    class="product-save-button"
+>
+    Save Changes
+</button>
 
 </div>
 

@@ -1,4 +1,14 @@
+console.log("VEGETABLES JS FILE LOADED");
 import { supabase } from './services/supabase.js';
+import { requireAdmin } from './admin-auth.js';
+
+const isAuthenticated = await requireAdmin();
+
+if (!isAuthenticated) {
+    throw new Error('Admin authentication required.');
+}
+
+
 
 const PRODUCT_IMAGES = {
     "Farm Fresh Red Tomato":
@@ -28,6 +38,7 @@ let vegetables = [];
 // ========================================
 
 async function loadVegetables() {
+    console.log("VEGETABLES: loadVegetables() started");
 
     const container =
         document.getElementById('vegetablesList');
@@ -36,6 +47,7 @@ async function loadVegetables() {
 
 
     try {
+        console.log("VEGETABLES: Sending Supabase query...");
 
         const { data, error } = await supabase
 
@@ -66,6 +78,10 @@ async function loadVegetables() {
             .eq('is_active', true)
 
             .order('id');
+
+        console.log("VEGETABLES: Supabase query finished");
+        console.log("VEGETABLES: data =", data);
+        console.log("VEGETABLES: error =", error);
 
 
         if (error) {
@@ -1587,20 +1603,24 @@ document.addEventListener('click', event => {
 // START
 // ========================================
 
-document.addEventListener('DOMContentLoaded', () => {
+async function initializeVegetablesPage() {
+    console.log("VEGETABLES: Page initialization started");
 
-    loadVegetables();
+    await loadVegetables();
 
     setupSearch();
-
     setupEditButtons();
-
     setupEditModal();
-
     setupVariantControls();
-
     setupAddProductModal();
-
     setupAddVariantControls();
+    setupImagePreview();
 
-});
+    console.log("VEGETABLES: Page initialization completed");
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeVegetablesPage);
+} else {
+    initializeVegetablesPage();
+}
