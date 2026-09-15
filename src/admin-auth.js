@@ -1,5 +1,11 @@
 import { supabase } from './services/supabase.js';
+import { requireAdmin, logoutAdmin } from './admin-auth.js';
 
+const isAuthenticated = await requireAdmin();
+
+if (!isAuthenticated) {
+    throw new Error('Admin authentication required.');
+}
 
 export async function requireAdmin() {
 
